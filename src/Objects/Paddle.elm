@@ -4,13 +4,13 @@ import Svg exposing (..)
 import Svg.Attributes exposing (..)
 
 
-paddle : Float -> Svg msg
-paddle xPosition =
+paddle : (Float, Float) -> (Float, Float) -> Svg msg
+paddle (xPosition, yPosition) paddleSize =
     rect
         [ x (String.fromFloat xPosition)
-        , y "76.5"
-        , width "6"
-        , height "2"
-        , fill "#bcc0dd"
+        , y (String.fromFloat yPosition)
+        , width (String.fromFloat <| Tuple.first paddleSize)
+        , height (String.fromFloat <| Tuple.second paddleSize)
+        , fill "#ffcb0b"
         ]
         []
