@@ -4,6 +4,7 @@ import Keyboard exposing (RawKey)
 import Material
 import Model exposing (..)
 import Array
+import Debug exposing (log)
 
 
 ---- UPDATE ----
@@ -301,14 +302,14 @@ updateGameDisplay dt gameModel =
         Playing
             { gameModel
                 | ballPosition =
-                    ( ballPositionX + ballDirectionX * ballSpeedX / dt
-                    , ballPositionY + ballDirectionY * ballSpeedY / dt
+                    ( ballPositionX + ballDirectionX * ballSpeedX * dt
+                    , ballPositionY + ballDirectionY * ballSpeedY * dt
                     )
                 , ballMovingDirection =
                     ( ballDirectionX
                     , ballDirectionY
                     )
-                , paddlePosition = ( paddlePositionX + paddleVelocityX, paddlePositionY )
+                , paddlePosition = ( paddlePositionX + paddleVelocityX * dt, paddlePositionY )
                 , blocks = newBlocks
             }
 
