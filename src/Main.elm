@@ -320,29 +320,30 @@ view model =
                 [ Html.text "Start moving!" ]
             ]
         , div []
-            [ gameBoard model ]
+            [ displayGameBoard model ]
         ]
 
 
-gameBoard : Model -> Html Msg
-gameBoard model =
-    case model.state of
-        NotPlaying _ ->
-            displayGameBoard model.state
+--gameBoard : Model -> Html Msg
+--gameBoard model =
+--    case model.state of
+--        NotPlaying _ ->
+--            displayGameBoard model.state
+--
+--        Playing _ ->
+--            displayGameBoard model.state
+--
+--        Won _ ->
+--            displayGameBoard model.state
+--
+--        Lost _ ->
+--            displayGameBoard model.state
 
-        Playing _ ->
-            displayGameBoard model.state
 
-        Won _ ->
-            displayGameBoard model.state
-
-        Lost _ ->
-            displayGameBoard model.state
-
-
-displayGameBoard : GameState -> Html Msg
-displayGameBoard gameState =
+displayGameBoard : Model -> Html Msg
+displayGameBoard model =
     let
+        gameState = model.state
         ( state, drawModel ) =
             case gameState of
                 NotPlaying gameModel ->
