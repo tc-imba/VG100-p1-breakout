@@ -1,0 +1,30 @@
+{
+  "name": "vg100-p1-breakout",
+  "version": "1.0.0",
+  "description": "This project is bootstrapped with [Create Elm App](https://github.com/halfzebra/create-elm-app).",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "build": "elm-app build",
+    "start": "elm-app start",
+    "test": "elm-app test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zhizhuoxin/vg100-p1-breakout.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/zhizhuoxin/vg100-p1-breakout/issues"
+  },
+  "homepage": "https://github.com/zhizhuoxin/vg100-p1-breakout#readme",
+  "dependencies": {
+    "material-icons": "^0.3.1",
+    "normalize.css": "^8.0.1",
+    "typeface-roboto": "^0.0.75"
+  }
+}

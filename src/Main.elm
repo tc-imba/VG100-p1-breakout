@@ -1,28 +1,34 @@
 module Main exposing (..)
 
+import Array
 import Browser
 import Browser.Events
-import Html exposing (Html, text, div, h1, img, button)
-import Html.Events exposing (onClick)
+import Html exposing (Html, button, div, h1, img, text)
 import Html.Attributes exposing (src)
+import Html.Events exposing (onClick)
+import Keyboard exposing (Key(..), RawKey)
+import Keyboard.Arrows
+import List
+import Material
+import Material.Button as Button
+import Material.Options as Options
+import Objects.Background exposing (background, backgroundtext)
+import Objects.Ball exposing (ball)
+import Objects.Blocks exposing (allBlocks)
+import Objects.Paddle exposing (paddle)
 import Svg exposing (..)
 import Svg.Attributes exposing (..)
-import Keyboard exposing (RawKey, Key(..))
-import Keyboard.Arrows
 import Time
-import Array
-import List
-import Objects.Ball exposing (ball)
-import Objects.Paddle exposing (paddle)
-import Objects.Background exposing (background, backgroundtext)
-import Objects.Blocks exposing (allBlocks)
+
 
 
 ---- MODEL ----
 
 
 type alias Model =
-    GameState
+    { state : GameState
+    , mdc : Material.Model Msg
+    }
 
 
 type GameState
@@ -33,19 +39,20 @@ type GameState
 
 
 type alias GameModel =
-    { ballPosition: (Float, Float)
-    , ballVelocity: (Float, Float)
-    , ballRadius: Float
-    , ballMovingSpeed: (Float, Float)
-    , paddlePosition: (Float, Float)
-    , paddleVelocityX: Float
-    , paddleMovingSpeed: Float
-    , paddleSize: (Float, Float)
-    , windowSize: (Float, Float)
-    , blockRange: (Float, Float)
-    , blockNumber: (Int, Int)
-    , blockSize: (Float, Float)
-    , blocks: Array.Array (Array.Array Bool)
+    { ballPosition : ( Float, Float )
+    , ballVelocity : ( Float, Float )
+    , ballRadius : Float
+    , ballMovingSpeed : ( Float, Float )
+    , paddlePosition : ( Float, Float )
+    , paddleVelocityX : Float
+    , paddleMovingSpeed : Float
+    , paddleSize : ( Float, Float )
+    , windowSize : ( Float, Float )
+    , blockRange : ( Float, Float )
+    , blockNumber : ( Int, Int )
+    , blockSize : ( Float, Float )
+    , blocks : Array.Array (Array.Array Bool)
+
     --, pressedKeys: List Key
     }
 
@@ -53,31 +60,39 @@ type alias GameModel =
 initGameModel : GameModel
 initGameModel =
     let
-        blockRangeX = 100
-        blockRangeY = 20
-        blockNumberX = 10
-        blockNumberY = 5
+        blockRangeX =
+            100
+
+        blockRangeY =
+            20
+
+        blockNumberX =
+            10
+
+        blockNumberY =
+            5
     in
-    { ballPosition = (25, 70)
-    , ballVelocity = (0,0)
+    { ballPosition = ( 25, 70 )
+    , ballVelocity = ( 0, 0 )
     , ballRadius = 2
-    , ballMovingSpeed = (10,10)
-    , paddlePosition = (45, 70)
+    , ballMovingSpeed = ( 10, 10 )
+    , paddlePosition = ( 45, 70 )
     , paddleVelocityX = 0
     , paddleMovingSpeed = 2
-    , paddleSize = (20, 2)
-    , windowSize = (100, 77)
-    , blockRange = (blockRangeX, blockRangeY)
-    , blockNumber = (blockNumberX, blockNumberY)
+    , paddleSize = ( 20, 2 )
+    , windowSize = ( 100, 77 )
+    , blockRange = ( blockRangeX, blockRangeY )
+    , blockNumber = ( blockNumberX, blockNumberY )
     , blockSize = ( blockRangeX / blockNumberX, blockRangeY / blockNumberY )
     , blocks = Array.repeat blockNumberX <| Array.repeat blockNumberY True
+
     --, pressedKeys = []
     }
 
 
 init : ( Model, Cmd Msg )
 init =
-    ( NotPlaying initGameModel, Cmd.none )
+    ( { state = NotPlaying initGameModel, mdc = Material.defaultModel }, Material.init Mdc )
 
 
 
@@ -91,6 +106,7 @@ type Msg
     | StartMoving
     | StopMoving
     | NoOp
+    | Mdc (Material.Msg Msg)
 
 
 type GameControl
@@ -103,18 +119,21 @@ type GameControl
 
 keyToGameControl : Bool -> RawKey -> Msg
 keyToGameControl isDown key =
-    case (Keyboard.anyKeyOriginal key) of
+    case Keyboard.anyKeyOriginal key of
         Just Keyboard.ArrowLeft ->
             GameInput PaddleLeft isDown
+
         Just Keyboard.ArrowRight ->
             GameInput PaddleRight isDown
+
         Just Keyboard.Spacebar ->
             GameInput Start isDown
+
         Just Keyboard.Enter ->
             GameInput Reset isDown
+
         _ ->
             NoOp
-
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -128,107 +147,159 @@ update msg model =
         --            )
         --        _ ->
         --            (model, Cmd.none)
+        Mdc msg_ ->
+            Material.update Mdc msg_ model
+
         GameInput Start isDown ->
             case isDown of
                 True ->
-                    case model of
+                    case model.state of
                         NotPlaying gameModel ->
                             let
                                 newModel =
                                     { gameModel
-                                    | ballVelocity =
-                                        ( Tuple.first gameModel.ballMovingSpeed
-                                        , -1 * ( Tuple.second gameModel.ballMovingSpeed)
-                                        )
+                                        | ballVelocity =
+                                            ( Tuple.first gameModel.ballMovingSpeed
+                                            , -1 * Tuple.second gameModel.ballMovingSpeed
+                                            )
                                     }
                             in
-                            ( Playing newModel, Cmd.none )
+                            ( { model | state = Playing newModel }, Cmd.none )
+
                         _ ->
-                            (model, Cmd.none)
+                            ( model, Cmd.none )
+
                 _ ->
-                    (model, Cmd.none)
+                    ( model, Cmd.none )
 
         GameInput Pause isDown ->
             case isDown of
                 True ->
-                    case model of
+                    case model.state of
                         Playing gameModel ->
                             let
-                                newModel = { gameModel | ballVelocity = (0,0) }
+                                newModel =
+                                    { gameModel | ballVelocity = ( 0, 0 ) }
                             in
-                            ( NotPlaying newModel, Cmd.none )
+                            ( { model | state = NotPlaying newModel }, Cmd.none )
+
                         _ ->
-                            (model, Cmd.none)
+                            ( model, Cmd.none )
+
                 _ ->
-                    (model, Cmd.none)
+                    ( model, Cmd.none )
 
         GameInput Reset isDown ->
             case isDown of
                 True ->
-                    ( NotPlaying initGameModel, Cmd.none )
+                    ( { model | state = NotPlaying initGameModel }, Cmd.none )
+
                 _ ->
-                    (model, Cmd.none)
+                    ( model, Cmd.none )
 
         GameInput PaddleLeft isDown ->
-            case model of
+            case model.state of
                 Playing gameModel ->
                     let
-                        newModel = { gameModel | paddleVelocityX = if isDown then -gameModel.paddleMovingSpeed else 0 }
+                        newModel =
+                            { gameModel
+                                | paddleVelocityX =
+                                    if isDown then
+                                        -gameModel.paddleMovingSpeed
+
+                                    else
+                                        0
+                            }
                     in
-                        ( Playing newModel, Cmd.none)
+                    ( { model | state = Playing newModel }, Cmd.none )
+
                 _ ->
                     ( model, Cmd.none )
 
         GameInput PaddleRight isDown ->
-            case model of
+            case model.state of
                 Playing gameModel ->
                     let
-                        newModel = { gameModel | paddleVelocityX = if isDown then gameModel.paddleMovingSpeed else 0 }
+                        newModel =
+                            { gameModel
+                                | paddleVelocityX =
+                                    if isDown then
+                                        gameModel.paddleMovingSpeed
+
+                                    else
+                                        0
+                            }
                     in
-                        ( Playing newModel, Cmd.none)
+                    ( { model | state = Playing newModel }, Cmd.none )
+
                 _ ->
                     ( model, Cmd.none )
 
         TimeUpdate dt ->
-            case model of
+            case model.state of
                 Playing gameModel ->
-                    updateGameDisplay dt gameModel
+                    ( { model | state = updateGameDisplay dt gameModel }, Cmd.none )
+
                 _ ->
-                    (model, Cmd.none)
+                    ( model, Cmd.none )
+
         _ ->
-            (model, Cmd.none)
+            ( model, Cmd.none )
 
 
-determineVelocity : GameModel -> (Float, Float)
+determineVelocity : GameModel -> ( Float, Float )
 determineVelocity gameModel =
     let
-        ( ballPositionX, ballPositionY ) = gameModel.ballPosition
-        ( ballSpeedX, ballSpeedY ) = gameModel.ballMovingSpeed
-        ( ballVelocityX, ballVelocityY ) = gameModel.ballVelocity
-        ( paddlePositionX, paddlePositionY ) = gameModel.paddlePosition
-        ( paddleWidth, paddleHeight ) = gameModel.paddleSize
-        r = gameModel.ballRadius
-        ( windowWidth, windowHeight ) = gameModel.windowSize
+        ( ballPositionX, ballPositionY ) =
+            gameModel.ballPosition
+
+        ( ballSpeedX, ballSpeedY ) =
+            gameModel.ballMovingSpeed
+
+        ( ballVelocityX, ballVelocityY ) =
+            gameModel.ballVelocity
+
+        ( paddlePositionX, paddlePositionY ) =
+            gameModel.paddlePosition
+
+        ( paddleWidth, paddleHeight ) =
+            gameModel.paddleSize
+
+        r =
+            gameModel.ballRadius
+
+        ( windowWidth, windowHeight ) =
+            gameModel.windowSize
+
         newBallVelocity =
-            ( if ballPositionX <= r then ballSpeedX
+            ( if ballPositionX <= r then
+                ballSpeedX
+
               else if ballPositionX >= windowWidth - r then
                 -ballSpeedX
+
               else if ballPositionX >= paddlePositionX && ballPositionX <= paddlePositionX + 0.5 && ballPositionY >= paddlePositionY && ballPositionY <= paddlePositionY + paddleHeight then
                 -ballSpeedX
+
               else if ballPositionX <= paddlePositionX + paddleWidth && ballPositionX >= paddlePositionX + paddleWidth - 0.5 && ballPositionY >= paddlePositionY && ballPositionY <= paddlePositionY + paddleHeight then
                 ballSpeedX
-              else ballVelocityX
-            , if ballPositionY <= r then ballSpeedY
+
+              else
+                ballVelocityX
+            , if ballPositionY <= r then
+                ballSpeedY
+
               else if ballPositionY >= paddlePositionY - r && ballPositionY <= paddlePositionY - r + 1 && ballPositionX >= paddlePositionX && ballPositionX <= paddlePositionX + paddleWidth then
                 -ballSpeedY
-              else if ballPositionY >= windowHeight - r then -ballSpeedY
-              else ballVelocityY
+
+              else if ballPositionY >= windowHeight - r then
+                -ballSpeedY
+
+              else
+                ballVelocityY
             )
     in
     newBallVelocity
-
-
-
 
 
 
@@ -237,11 +308,16 @@ determineVelocity gameModel =
 
 view : Model -> Html Msg
 view model =
-    div [ class "container"]
+    div [ class "container" ]
         [ div []
-            [ button [ onClick (GameInput Start True)] [ Html.text "Start moving!"]
-            , button [ onClick (GameInput Pause True)] [ Html.text "Stop moving!"]
-            , button [ onClick (GameInput Reset True)] [ Html.text "Reset the Game!"]
+            [ button [ onClick (GameInput Start True) ] [ Html.text "Start moving!" ]
+            , button [ onClick (GameInput Pause True) ] [ Html.text "Stop moving!" ]
+            , button [ onClick (GameInput Reset True) ] [ Html.text "Reset the Game!" ]
+            , Button.view Mdc
+                "button-start"
+                model.mdc
+                [ Button.ripple, Options.onClick (GameInput Start True) ]
+                [ Html.text "Start moving!" ]
             ]
         , div []
             [ gameBoard model ]
@@ -250,33 +326,43 @@ view model =
 
 gameBoard : Model -> Html Msg
 gameBoard model =
-    case model of
+    case model.state of
         NotPlaying _ ->
-            displayGameBoard model
+            displayGameBoard model.state
+
         Playing _ ->
-            displayGameBoard model
+            displayGameBoard model.state
+
         Won _ ->
-            displayGameBoard model
+            displayGameBoard model.state
+
         Lost _ ->
-            displayGameBoard model
+            displayGameBoard model.state
 
 
 displayGameBoard : GameState -> Html Msg
 displayGameBoard gameState =
     let
-        (state, drawModel) =
+        ( state, drawModel ) =
             case gameState of
-                NotPlaying gameModel -> (Objects.Background.NotPlaying, gameModel)
-                Playing gameModel -> (Objects.Background.Playing, gameModel)
-                Won gameModel -> (Objects.Background.Won, gameModel)
-                Lost gameModel -> (Objects.Background.Lost, gameModel)
+                NotPlaying gameModel ->
+                    ( Objects.Background.NotPlaying, gameModel )
+
+                Playing gameModel ->
+                    ( Objects.Background.Playing, gameModel )
+
+                Won gameModel ->
+                    ( Objects.Background.Won, gameModel )
+
+                Lost gameModel ->
+                    ( Objects.Background.Lost, gameModel )
     in
     Svg.svg
         [ width "100%"
         , height "100%"
         , viewBox "0 0 100 77"
         ]
-        ( List.append
+        (List.append
             [ background drawModel.windowSize
             , backgroundtext state
             , ball drawModel.ballPosition drawModel.ballRadius
@@ -286,18 +372,25 @@ displayGameBoard gameState =
         )
 
 
-updateGameDisplay : Float -> GameModel -> ( Model, Cmd Msg )
+updateGameDisplay : Float -> GameModel -> GameState
 updateGameDisplay dt gameModel =
     let
         ( ballPositionX, ballPositionY ) =
             gameModel.ballPosition
+
         ( ballVelocityX, ballVelocityY ) =
             determineVelocity gameModel
-        (paddlePositionX, paddlePositionY) = gameModel.paddlePosition
-        paddleVelocityX = gameModel.paddleVelocityX
+
+        ( paddlePositionX, paddlePositionY ) =
+            gameModel.paddlePosition
+
+        paddleVelocityX =
+            gameModel.paddleVelocityX
+
         newGameModel =
             if ballPositionY >= 75 then
                 Lost gameModel
+
             else
                 Playing
                     { gameModel
@@ -309,10 +402,10 @@ updateGameDisplay dt gameModel =
                             ( ballVelocityX
                             , ballVelocityY
                             )
-                        , paddlePosition = (paddlePositionX + paddleVelocityX, paddlePositionY)
+                        , paddlePosition = ( paddlePositionX + paddleVelocityX, paddlePositionY )
                     }
     in
-    ( newGameModel, Cmd.none )
+    newGameModel
 
 
 
@@ -325,6 +418,7 @@ subscriptions model =
         [ Browser.Events.onAnimationFrameDelta TimeUpdate
         , Keyboard.downs <| keyToGameControl True
         , Keyboard.ups <| keyToGameControl False
+        , Material.subscriptions Mdc model
         ]
 
 
