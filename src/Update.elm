@@ -3,7 +3,7 @@ module Update exposing (..)
 import Keyboard exposing (RawKey)
 import Material
 import Model exposing (..)
-
+import Array
 
 
 ---- UPDATE ----
@@ -50,10 +50,8 @@ update msg model =
                             let
                                 newModel =
                                     { gameModel
-                                        | ballVelocity =
-                                            ( Tuple.first gameModel.ballMovingSpeed
-                                            , -1 * Tuple.second gameModel.ballMovingSpeed
-                                            )
+                                        | ballMovingDirection =
+                                            ( 1, -1 )
                                     }
                             in
                             ( { model | state = Playing newModel }, Cmd.none )
@@ -71,7 +69,7 @@ update msg model =
                         Playing gameModel ->
                             let
                                 newModel =
-                                    { gameModel | ballVelocity = ( 0, 0 ) }
+                                    { gameModel | ballMovingDirection = ( 0, 0 ) }
                             in
                             ( { model | state = NotPlaying newModel }, Cmd.none )
 
@@ -139,17 +137,66 @@ update msg model =
             ( model, Cmd.none )
 
 
-determineVelocity : GameModel -> ( Float, Float )
+determineBlockCollision : GameModel -> { direction: ( Float, Float), block: ( Bool, (Int, Int) ) }
+determineBlockCollision gameModel =
+    let
+        ( ballPositionX, ballPositionY ) = gameModel.ballPosition
+
+        ( balldirectionX, balldirectionY ) = gameModel.ballMovingDirection
+
+        r = gameModel.ballRadius
+
+        ( width, height ) = gameModel.blockSize
+
+        blockJudge = gameModel.blocks
+
+        ( ballEdgeX, ballEdgeY ) = ( ballPositionX + balldirectionX * r, ballPositionY + balldirectionY * r )
+
+        ( indexCenterX, indexCenterY ) = ( Basics.floor (ballPositionX / width), Basics.floor (ballPositionY / height) )
+
+        ( indexEdgeX, indexEdgeY ) = ( Basics.floor (ballEdgeX / width), Basics.floor (ballEdgeY / height) )
+
+        blockNumber = Tuple.second gameModel.blockNumber
+    in
+    if (Maybe.withDefault (Array.repeat blockNumber False) (Array.get indexCenterX blockJudge)) |> Array.get indexEdgeY |> Maybe.withDefault False then
+        { direction = ( balldirectionX, -balldirectionY )
+        , block =
+            ( True
+            , ( indexCenterX, indexEdgeY )
+            )
+        }
+    else if (Maybe.withDefault (Array.repeat blockNumber False) (Array.get indexEdgeX blockJudge)) |> Array.get indexCenterY |> Maybe.withDefault False then
+        { direction = ( -balldirectionX, balldirectionY )
+        , block =
+            ( True
+            , ( indexEdgeX, indexCenterY )
+            )
+        }
+    else if (Maybe.withDefault (Array.repeat blockNumber False) (Array.get indexEdgeX blockJudge)) |> Array.get indexEdgeY |> Maybe.withDefault False then
+        { direction = ( -balldirectionX, -balldirectionY )
+        , block =
+            ( True
+            , ( indexEdgeX, indexEdgeY )
+            )
+        }
+    else
+        { direction = ( balldirectionX, balldirectionY )
+        , block =
+            ( False
+            , ( -1, -1 )
+            )
+        }
+
+
+
+determineVelocity : GameModel -> { direction: ( Float, Float), block: ( Bool, (Int, Int) ) }
 determineVelocity gameModel =
     let
         ( ballPositionX, ballPositionY ) =
             gameModel.ballPosition
 
-        ( ballSpeedX, ballSpeedY ) =
-            gameModel.ballMovingSpeed
-
-        ( ballVelocityX, ballVelocityY ) =
-            gameModel.ballVelocity
+        ( ballDirectionX, ballDirectionY ) =
+            gameModel.ballMovingDirection
 
         ( paddlePositionX, paddlePositionY ) =
             gameModel.paddlePosition
@@ -163,35 +210,53 @@ determineVelocity gameModel =
         ( windowWidth, windowHeight ) =
             gameModel.windowSize
 
-        newBallVelocity =
+        --judgeBlockRange = ((Tuple.second gameModel.blockRange + r) >= ballPositionY)
+
+        newBallDirection =
             ( if ballPositionX <= r then
-                ballSpeedX
+                1
 
               else if ballPositionX >= windowWidth - r then
-                -ballSpeedX
+                -1
 
               else if ballPositionX >= paddlePositionX && ballPositionX <= paddlePositionX + 0.5 && ballPositionY >= paddlePositionY && ballPositionY <= paddlePositionY + paddleHeight then
-                -ballSpeedX
+                -1
 
               else if ballPositionX <= paddlePositionX + paddleWidth && ballPositionX >= paddlePositionX + paddleWidth - 0.5 && ballPositionY >= paddlePositionY && ballPositionY <= paddlePositionY + paddleHeight then
-                ballSpeedX
+                1
 
               else
-                ballVelocityX
+                0
             , if ballPositionY <= r then
-                ballSpeedY
+                1
 
               else if ballPositionY >= paddlePositionY - r && ballPositionY <= paddlePositionY - r + 1 && ballPositionX >= paddlePositionX && ballPositionX <= paddlePositionX + paddleWidth then
-                -ballSpeedY
+                -1
 
               else if ballPositionY >= windowHeight - r then
-                -ballSpeedY
+                -1
 
               else
-                ballVelocityY
+                0
             )
     in
-    newBallVelocity
+        if Tuple.first newBallDirection == 0 && Tuple.second newBallDirection == 0 then
+            determineBlockCollision gameModel
+        else
+            let
+                finalDirection =
+                    ( if Tuple.first newBallDirection == 0 then ballDirectionX
+                      else Tuple.first newBallDirection
+                    , if Tuple.second newBallDirection == 0 then ballDirectionY
+                      else Tuple.second newBallDirection
+                    )
+            in
+            { direction = finalDirection
+            , block =
+                ( False
+                , ( -1, -1 )
+                )
+            }
 
 
 updateGameDisplay : Float -> GameModel -> GameState
@@ -200,8 +265,16 @@ updateGameDisplay dt gameModel =
         ( ballPositionX, ballPositionY ) =
             gameModel.ballPosition
 
-        ( ballVelocityX, ballVelocityY ) =
-            determineVelocity gameModel
+        collisionResult = determineVelocity gameModel
+
+        ( ballDirectionX, ballDirectionY ) =
+            collisionResult.direction
+
+        ( judgeBlock, ( blockIndexX, blockIndexY ) ) =
+            collisionResult.block
+
+        ( ballSpeedX, ballSpeedY ) =
+            gameModel.ballMovingSpeed
 
         ( paddlePositionX, paddlePositionY ) =
             gameModel.paddlePosition
@@ -209,23 +282,33 @@ updateGameDisplay dt gameModel =
         paddleVelocityX =
             gameModel.paddleVelocityX
 
-        newGameModel =
-            if ballPositionY >= 75 then
-                Lost gameModel
+        blockNumber = Tuple.second gameModel.blockNumber
 
+        oldBlocks = gameModel.blocks
+
+        newBlocks =
+            if judgeBlock then
+                Array.set blockIndexX
+                    (Array.set blockIndexY False (Maybe.withDefault (Array.repeat blockNumber False) (Array.get blockIndexX oldBlocks)))
+                    oldBlocks
             else
-                Playing
-                    { gameModel
-                        | ballPosition =
-                            ( ballPositionX + ballVelocityX / dt
-                            , ballPositionY + ballVelocityY / dt
-                            )
-                        , ballVelocity =
-                            ( ballVelocityX
-                            , ballVelocityY
-                            )
-                        , paddlePosition = ( paddlePositionX + paddleVelocityX, paddlePositionY )
-                    }
+                oldBlocks
     in
-    newGameModel
+    if ballPositionY >= 75 then
+        Lost gameModel
+
+    else
+        Playing
+            { gameModel
+                | ballPosition =
+                    ( ballPositionX + ballDirectionX * ballSpeedX / dt
+                    , ballPositionY + ballDirectionY * ballSpeedY / dt
+                    )
+                , ballMovingDirection =
+                    ( ballDirectionX
+                    , ballDirectionY
+                    )
+                , paddlePosition = ( paddlePositionX + paddleVelocityX, paddlePositionY )
+                , blocks = newBlocks
+            }
 

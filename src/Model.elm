@@ -24,7 +24,7 @@ type GameState
 
 type alias GameModel =
     { ballPosition : ( Float, Float )
-    , ballVelocity : ( Float, Float )
+    , ballMovingDirection : ( Float, Float )
     , ballRadius : Float
     , ballMovingSpeed : ( Float, Float )
     , paddlePosition : ( Float, Float )
@@ -75,8 +75,8 @@ initGameModel =
             5
     in
     { ballPosition = ( 25, 70 )
-    , ballVelocity = ( 0, 0 )
-    , ballRadius = 2
+    , ballMovingDirection = ( 0, 0 )
+    , ballRadius = 1.5
     , ballMovingSpeed = ( 10, 10 )
     , paddlePosition = ( 45, 70 )
     , paddleVelocityX = 0
