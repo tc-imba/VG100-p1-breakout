@@ -3,7 +3,6 @@ module Update exposing (..)
 import Keyboard exposing (RawKey)
 import Material
 import Model exposing (..)
-import View exposing (updateGameDisplay)
 
 
 
@@ -138,3 +137,95 @@ update msg model =
 
         _ ->
             ( model, Cmd.none )
+
+
+determineVelocity : GameModel -> ( Float, Float )
+determineVelocity gameModel =
+    let
+        ( ballPositionX, ballPositionY ) =
+            gameModel.ballPosition
+
+        ( ballSpeedX, ballSpeedY ) =
+            gameModel.ballMovingSpeed
+
+        ( ballVelocityX, ballVelocityY ) =
+            gameModel.ballVelocity
+
+        ( paddlePositionX, paddlePositionY ) =
+            gameModel.paddlePosition
+
+        ( paddleWidth, paddleHeight ) =
+            gameModel.paddleSize
+
+        r =
+            gameModel.ballRadius
+
+        ( windowWidth, windowHeight ) =
+            gameModel.windowSize
+
+        newBallVelocity =
+            ( if ballPositionX <= r then
+                ballSpeedX
+
+              else if ballPositionX >= windowWidth - r then
+                -ballSpeedX
+
+              else if ballPositionX >= paddlePositionX && ballPositionX <= paddlePositionX + 0.5 && ballPositionY >= paddlePositionY && ballPositionY <= paddlePositionY + paddleHeight then
+                -ballSpeedX
+
+              else if ballPositionX <= paddlePositionX + paddleWidth && ballPositionX >= paddlePositionX + paddleWidth - 0.5 && ballPositionY >= paddlePositionY && ballPositionY <= paddlePositionY + paddleHeight then
+                ballSpeedX
+
+              else
+                ballVelocityX
+            , if ballPositionY <= r then
+                ballSpeedY
+
+              else if ballPositionY >= paddlePositionY - r && ballPositionY <= paddlePositionY - r + 1 && ballPositionX >= paddlePositionX && ballPositionX <= paddlePositionX + paddleWidth then
+                -ballSpeedY
+
+              else if ballPositionY >= windowHeight - r then
+                -ballSpeedY
+
+              else
+                ballVelocityY
+            )
+    in
+    newBallVelocity
+
+
+updateGameDisplay : Float -> GameModel -> GameState
+updateGameDisplay dt gameModel =
+    let
+        ( ballPositionX, ballPositionY ) =
+            gameModel.ballPosition
+
+        ( ballVelocityX, ballVelocityY ) =
+            determineVelocity gameModel
+
+        ( paddlePositionX, paddlePositionY ) =
+            gameModel.paddlePosition
+
+        paddleVelocityX =
+            gameModel.paddleVelocityX
+
+        newGameModel =
+            if ballPositionY >= 75 then
+                Lost gameModel
+
+            else
+                Playing
+                    { gameModel
+                        | ballPosition =
+                            ( ballPositionX + ballVelocityX / dt
+                            , ballPositionY + ballVelocityY / dt
+                            )
+                        , ballVelocity =
+                            ( ballVelocityX
+                            , ballVelocityY
+                            )
+                        , paddlePosition = ( paddlePositionX + paddleVelocityX, paddlePositionY )
+                    }
+    in
+    newGameModel
+
