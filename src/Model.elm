@@ -35,8 +35,8 @@ type alias GameModel =
     , blockRange : ( Float, Float )
     , blockNumber : ( Int, Int )
     , blockSize : ( Float, Float )
-    , blocks : Array.Array (Array.Array Bool)
-
+    , blocks : Array.Array (Array.Array Int)
+    , life : Int
     --, pressedKeys: List Key
     }
 
@@ -86,8 +86,8 @@ initGameModel =
     , blockRange = ( blockRangeX, blockRangeY )
     , blockNumber = ( blockNumberX, blockNumberY )
     , blockSize = ( blockRangeX / blockNumberX, blockRangeY / blockNumberY )
-    , blocks = Array.repeat blockNumberX <| Array.repeat blockNumberY True
-
+    , blocks = Array.repeat blockNumberX <| Array.repeat blockNumberY 3
+    , life = 5
     --, pressedKeys = []
     }
 

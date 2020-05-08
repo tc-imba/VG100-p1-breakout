@@ -4,22 +4,30 @@ import Svg exposing (..)
 import Svg.Attributes exposing (..)
 import Array
 import Basics
+import Maybe
 
 
-block : (Float, Float) -> (Float, Float) -> Svg msg
-block (xPosition, yPosition) (blockWidth, blockHeight) =
+block : (Float, Float) -> (Float, Float) -> Int -> Svg msg
+block (xPosition, yPosition) (blockWidth, blockHeight) life =
+    let
+        color =
+            Array.fromList
+                [ "#6dbac0"
+                , "#718acc"
+                , "#685bd1"]
+    in
     rect
         [ x (String.fromFloat xPosition)
         , y (String.fromFloat yPosition)
         , width (String.fromFloat blockWidth)
         , height (String.fromFloat blockHeight)
-        , fill "#777777"
-        , stroke "#d8dadd"
+        , fill (Maybe.withDefault "#ffffff" (Array.get (life - 1) color))
+        , stroke "#ffffff"
         , strokeWidth "0.1"
         ]
         []
 
-allBlocks : (Array.Array (Array.Array Bool)) -> (Float, Float) -> List (Svg msg)
+allBlocks : (Array.Array (Array.Array Int)) -> (Float, Float) -> List (Svg msg)
 allBlocks blocks (blockWidth, blockHeight) =
     let
         boolList =
@@ -37,9 +45,9 @@ allBlocks blocks (blockWidth, blockHeight) =
                         blocks
                     )
                 )
-        blockPositionList = List.filter ( \x -> Tuple.second x ) boolList
+        blockPositionList = List.filter ( \x -> (Tuple.second x) > 0 ) boolList
     in
-    List.map ( \x -> ( block (Tuple.first x) (blockWidth, blockHeight) ) ) blockPositionList
+    List.map ( \x -> ( block (Tuple.first x) (blockWidth, blockHeight) (Tuple.second x) ) ) blockPositionList
 
 
 getPosition : (Int, Int) -> (Float, Float) -> (Float, Float)

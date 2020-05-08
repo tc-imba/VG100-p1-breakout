@@ -17,7 +17,7 @@ backgroundtext gameState =
             case gameState of
                 NotPlaying -> "Press Space to Start."
                 Playing -> ""
-                Won -> "Congratulations! You won! Press Enter to play again."
+                Won -> "You won! Press Enter to play again."
                 Lost -> "Game over! Press Enter to try again."
     in
     Svg.text_
@@ -26,7 +26,7 @@ backgroundtext gameState =
         , y         "30"
         , fontSize  "5"
         , textAnchor "middle"
-        , fill "#002c5a"
+        , fill "#5933ce"
         ]
         [ Svg.tspan [x "50", dy "1.2em"] [Svg.text text]
         ]
@@ -38,6 +38,8 @@ background (boxWidth, boxHeight) =
         , y (String.fromFloat 0)
         , width (String.fromFloat boxWidth)
         , height (String.fromFloat boxHeight)
-        , fill "#d8dadd"
+        , fill "#ffffff"
+        , stroke "#5933ce"
+        , strokeWidth "0.1"
         ]
         []

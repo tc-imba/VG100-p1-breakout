@@ -138,7 +138,7 @@ update msg model =
             ( model, Cmd.none )
 
 
-determineBlockCollision : GameModel -> { direction: ( Float, Float), block: ( Bool, (Int, Int) ) }
+determineBlockCollision : GameModel -> { direction: ( Float, Float), block: ( Int, (Int, Int) ) }
 determineBlockCollision gameModel =
     let
         ( ballPositionX, ballPositionY ) = gameModel.ballPosition
@@ -158,39 +158,198 @@ determineBlockCollision gameModel =
         ( indexEdgeX, indexEdgeY ) = ( Basics.floor (ballEdgeX / width), Basics.floor (ballEdgeY / height) )
 
         blockNumber = Tuple.second gameModel.blockNumber
+
+        upDownLife = ((Maybe.withDefault (Array.repeat blockNumber 0) (Array.get indexCenterX blockJudge)) |> Array.get indexEdgeY |> Maybe.withDefault 0)
+
+        leftRightLife = ((Maybe.withDefault (Array.repeat blockNumber 0) (Array.get indexEdgeX blockJudge)) |> Array.get indexCenterY |> Maybe.withDefault 0)
+
+        cornerLife = ((Maybe.withDefault (Array.repeat blockNumber 0) (Array.get indexEdgeX blockJudge)) |> Array.get indexEdgeY |> Maybe.withDefault 0)
     in
-    if (Maybe.withDefault (Array.repeat blockNumber False) (Array.get indexCenterX blockJudge)) |> Array.get indexEdgeY |> Maybe.withDefault False then
+    if upDownLife > 0 then
         { direction = ( balldirectionX, -balldirectionY )
         , block =
-            ( True
+            ( upDownLife
             , ( indexCenterX, indexEdgeY )
             )
         }
-    else if (Maybe.withDefault (Array.repeat blockNumber False) (Array.get indexEdgeX blockJudge)) |> Array.get indexCenterY |> Maybe.withDefault False then
+    else if leftRightLife > 0 then
         { direction = ( -balldirectionX, balldirectionY )
         , block =
-            ( True
+            ( leftRightLife
             , ( indexEdgeX, indexCenterY )
             )
         }
-    else if (Maybe.withDefault (Array.repeat blockNumber False) (Array.get indexEdgeX blockJudge)) |> Array.get indexEdgeY |> Maybe.withDefault False then
+    else if cornerLife > 0 then
         { direction = ( -balldirectionX, -balldirectionY )
         , block =
-            ( True
+            ( cornerLife
             , ( indexEdgeX, indexEdgeY )
             )
         }
     else
         { direction = ( balldirectionX, balldirectionY )
         , block =
-            ( False
+            ( 0
             , ( -1, -1 )
             )
         }
 
 
+determinePaddleCollision : GameModel -> { direction: (Float, Float), judgeCollision: Bool, newBallSpeedX: Float }
+determinePaddleCollision gameModel =
+    let
+        ( ballPositionX, ballPositionY ) = gameModel.ballPosition
 
-determineVelocity : GameModel -> { direction: ( Float, Float), block: ( Bool, (Int, Int) ) }
+        ( ballDirectionX, ballDirectionY ) = gameModel.ballMovingDirection
+
+        r = gameModel.ballRadius
+
+        ( width, height ) = gameModel.paddleSize
+
+        ( paddlePositionX, paddlePositionY ) = gameModel.paddlePosition
+
+        paddleVelocity = gameModel.paddleVelocityX
+
+        ballSpeedX = Tuple.first gameModel.ballMovingSpeed
+    in
+    if ballDirectionY > 0 then
+        if ballPositionY + r >= paddlePositionY && ballPositionY + r <= paddlePositionY + 1 && ballPositionX >= paddlePositionX && ballPositionX <= paddlePositionX + width then
+            let
+                ( newBallDirectionX, newBallSpeedX ) =
+                    if ballSpeedX * ballDirectionX + paddleVelocity * 0.5 >= 0 then
+                        ( ballDirectionX, ballSpeedX * ballDirectionX + paddleVelocity * 0.5 )
+                    else
+                        ( ballDirectionX, -(ballSpeedX * ballDirectionX + paddleVelocity * 0.5) )
+            in
+            { direction = ( newBallDirectionX, -ballDirectionY )
+            , judgeCollision = True
+            , newBallSpeedX = newBallSpeedX
+            }
+
+        else if ballDirectionX > 0 && ballPositionX + r >= paddlePositionX && ballPositionX + r <= paddlePositionX + 1 && ballPositionY >= paddlePositionY && ballPositionY <= paddlePositionY + height then
+            { direction = ( -ballDirectionX, ballPositionY)
+            , judgeCollision = True
+            , newBallSpeedX = ballSpeedX
+            }
+
+        else if ballDirectionX < 0 && ballPositionX - r <= paddlePositionX + width && ballPositionX - r >= paddlePositionX + width - 1 && ballPositionY >= paddlePositionY && ballPositionY <= paddlePositionY + height then
+            { direction = ( -ballDirectionX, ballPositionY)
+            , judgeCollision = True
+            , newBallSpeedX = ballSpeedX
+            }
+
+        else if (ballPositionX - paddlePositionX) * (ballPositionX - paddlePositionX) + (ballPositionY - paddlePositionY) * (ballPositionY - paddlePositionY) < r*r then
+            { direction = ( -1, -1 )
+            , judgeCollision = True
+            , newBallSpeedX = ballSpeedX
+            }
+
+        else if (ballPositionX - paddlePositionX - width) * (ballPositionX - paddlePositionX - width) + (ballPositionY - paddlePositionY) * (ballPositionY - paddlePositionY) < r*r then
+            { direction = ( 1, -1 )
+            , judgeCollision = True
+            , newBallSpeedX = ballSpeedX
+            }
+
+        else
+            { direction = ( ballDirectionX, ballDirectionY)
+            , judgeCollision = False
+            , newBallSpeedX = ballSpeedX
+            }
+    else
+        { direction = ( ballDirectionX, ballDirectionY)
+        , judgeCollision = False
+        , newBallSpeedX = ballSpeedX
+        }
+
+
+determineWallCollision : GameModel -> { direction: (Float, Float), judgeCollision: Bool }
+determineWallCollision gameModel =
+    let
+        ( ballPositionX, ballPositionY ) =
+            gameModel.ballPosition
+
+        r =
+            gameModel.ballRadius
+
+        ( ballDirectionX, ballDirectionY ) =
+            gameModel.ballMovingDirection
+
+        ( windowWidth, windowHeight ) =
+            gameModel.windowSize
+
+        (newBallDirectionX, newBallDirectionY) =
+            ( if ballPositionX <= r then
+                1
+
+              else if ballPositionX >= windowWidth - r then
+                -1
+
+              else
+                0
+            , if ballPositionY <= r then
+                1
+
+              else if ballPositionY >= windowHeight - r then
+                -1
+
+              else
+                0
+            )
+    in
+    case ( newBallDirectionX, newBallDirectionY ) of
+        (0, 0) ->
+            { direction = ( ballDirectionX, ballDirectionY )
+            , judgeCollision = False
+            }
+        (0, _) ->
+            { direction = ( ballDirectionX, newBallDirectionY )
+            , judgeCollision = True
+            }
+        (_, 0) ->
+            { direction = ( newBallDirectionX, ballDirectionY )
+            , judgeCollision = True
+            }
+        _ ->
+            { direction = ( newBallDirectionX, newBallDirectionY )
+            , judgeCollision = True
+            }
+
+
+determineCollisionResult : GameModel -> { direction: (Float, Float), block: ( Int, (Int, Int) ), newBallSpeed: (Float, Float), changeSpeed: Bool }
+determineCollisionResult gameModel =
+    let
+        judgeWallCollision = determineWallCollision gameModel
+
+        ballSpeed = gameModel.ballMovingSpeed
+    in
+    if judgeWallCollision.judgeCollision then
+        { direction = judgeWallCollision.direction
+        , block = ( 0, (-1, -1) )
+        , newBallSpeed = ballSpeed
+        , changeSpeed = False
+        }
+    else
+        let
+            judgePaddleCollision = determinePaddleCollision gameModel
+        in
+        if judgePaddleCollision.judgeCollision then
+            { direction = judgePaddleCollision.direction
+            , block = ( 0, (-1, -1) )
+            , newBallSpeed = ( judgePaddleCollision.newBallSpeedX, Tuple.second ballSpeed )
+            , changeSpeed = True
+            }
+        else
+            let
+                judgeBlockCollision = determineBlockCollision gameModel
+            in
+            { direction = judgeBlockCollision.direction
+            , block = judgeBlockCollision.block
+            , newBallSpeed = ballSpeed
+            , changeSpeed = False
+            }
+
+
+determineVelocity : GameModel -> { direction: ( Float, Float), block: ( Int, (Int, Int) ) }
 determineVelocity gameModel =
     let
         ( ballPositionX, ballPositionY ) =
@@ -245,16 +404,16 @@ determineVelocity gameModel =
             determineBlockCollision gameModel
         else
             let
-                finalDirection =
-                    ( if Tuple.first newBallDirection == 0 then ballDirectionX
-                      else Tuple.first newBallDirection
-                    , if Tuple.second newBallDirection == 0 then ballDirectionY
-                      else Tuple.second newBallDirection
-                    )
+               finalDirection =
+                   ( if Tuple.first newBallDirection == 0 then ballDirectionX
+                     else Tuple.first newBallDirection
+                   , if Tuple.second newBallDirection == 0 then ballDirectionY
+                     else Tuple.second newBallDirection
+                   )
             in
             { direction = finalDirection
             , block =
-                ( False
+                ( 0
                 , ( -1, -1 )
                 )
             }
@@ -266,7 +425,7 @@ updateGameDisplay dt gameModel =
         ( ballPositionX, ballPositionY ) =
             gameModel.ballPosition
 
-        collisionResult = determineVelocity gameModel
+        collisionResult = determineCollisionResult gameModel
 
         ( ballDirectionX, ballDirectionY ) =
             collisionResult.direction
@@ -293,20 +452,44 @@ updateGameDisplay dt gameModel =
                     (Array.map (\row -> Array.toList row) oldBlocks)
                 )
 
-        judgeNotWin = List.member True blockList
+        judgeWin =
+            if ( List.sum blockList ) == 0 then True
+            else False
 
         newBlocks =
-            if judgeBlock then
+            if judgeBlock > 0 then
                 Array.set blockIndexX
-                    (Array.set blockIndexY False (Maybe.withDefault (Array.repeat blockNumber False) (Array.get blockIndexX oldBlocks)))
+                    (Array.set blockIndexY (judgeBlock - 1) (Maybe.withDefault (Array.repeat blockNumber 0) (Array.get blockIndexX oldBlocks)))
                     oldBlocks
             else
                 oldBlocks
+
+        newBallMovingSpeed =
+            if collisionResult.changeSpeed then
+                collisionResult.newBallSpeed
+            else
+                ( ballSpeedX, ballSpeedY )
+
+        remainedLife = gameModel.life
+
+        r = gameModel.ballRadius
+
+        windowHeight = Tuple.second gameModel.windowSize
     in
-    if ballPositionY >= 75 then
+    if ballPositionY >= windowHeight - r && remainedLife == 0 then
         Lost gameModel
 
-    else if not judgeNotWin then
+    else if ballPositionY >= windowHeight - r && remainedLife > 0 then
+        Playing
+            { gameModel
+                | life = remainedLife - 1
+                , ballMovingDirection =
+                    ( ballDirectionX, -1 )
+                , ballPosition =
+                    ( ballPositionY, windowHeight - r - 10 )
+            }
+
+    else if judgeWin then
         Won gameModel
 
     else
@@ -322,5 +505,6 @@ updateGameDisplay dt gameModel =
                     )
                 , paddlePosition = ( paddlePositionX + paddleVelocityX * dt, paddlePositionY )
                 , blocks = newBlocks
+                , ballMovingSpeed = newBallMovingSpeed
             }
 
