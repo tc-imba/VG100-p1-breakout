@@ -287,6 +287,14 @@ updateGameDisplay dt gameModel =
 
         oldBlocks = gameModel.blocks
 
+        blockList =
+            List.foldl (\x a -> List.append x a) []
+                ( Array.toList
+                    (Array.map (\row -> Array.toList row) oldBlocks)
+                )
+
+        judgeNotWin = List.member True blockList
+
         newBlocks =
             if judgeBlock then
                 Array.set blockIndexX
@@ -297,6 +305,9 @@ updateGameDisplay dt gameModel =
     in
     if ballPositionY >= 75 then
         Lost gameModel
+
+    else if not judgeNotWin then
+        Won gameModel
 
     else
         Playing
