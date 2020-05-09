@@ -211,55 +211,82 @@ determinePaddleCollision gameModel =
         paddleVelocity = gameModel.paddleVelocityX
 
         ballSpeedX = Tuple.first gameModel.ballMovingSpeed
+
+        paddleEffective = gameModel.effectiveOfPaddle
     in
-    if ballDirectionY > 0 then
-        if ballPositionY + r >= paddlePositionY && ballPositionY + r <= paddlePositionY + 1 && ballPositionX >= paddlePositionX && ballPositionX <= paddlePositionX + width then
-            let
-                ( newBallDirectionX, newBallSpeedX ) =
-                    if ballSpeedX * ballDirectionX + paddleVelocity * 0.5 >= 0 then
-                        ( ballDirectionX, ballSpeedX * ballDirectionX + paddleVelocity * 0.5 )
-                    else
-                        ( ballDirectionX, -(ballSpeedX * ballDirectionX + paddleVelocity * 0.5) )
-            in
-            { direction = ( newBallDirectionX, -ballDirectionY )
-            , judgeCollision = True
-            , newBallSpeedX = newBallSpeedX
-            }
+    if ballDirectionY >= 0 && ballPositionY + r >= paddlePositionY && ballPositionY + r <= paddlePositionY + 1 && ballPositionX >= paddlePositionX && ballPositionX <= paddlePositionX + width then
+        let
+            ( newBallDirectionX, newBallSpeedX ) =
+                if ballSpeedX * ballDirectionX + paddleVelocity * paddleEffective >= 0 then
+                    ( ballDirectionX, ballSpeedX * ballDirectionX + paddleVelocity * paddleEffective )
+                else
+                    ( ballDirectionX, -(ballSpeedX * ballDirectionX + paddleVelocity * paddleEffective) )
+        in
+        { direction = ( newBallDirectionX, -ballDirectionY )
+        , judgeCollision = True
+        , newBallSpeedX = newBallSpeedX
+        }
 
-        else if ballDirectionX > 0 && ballPositionX + r >= paddlePositionX && ballPositionX + r <= paddlePositionX + 1 && ballPositionY >= paddlePositionY && ballPositionY <= paddlePositionY + height then
-            { direction = ( -ballDirectionX, ballPositionY)
-            , judgeCollision = True
-            , newBallSpeedX = ballSpeedX
-            }
+     else if ballDirectionY <= 0 && ballPositionY - r <= paddlePositionY + height && ballPositionY - r > paddlePositionY + height - 1 && ballPositionX >= paddlePositionX && ballPositionX <= paddlePositionX + width then
+         let
+             ( newBallDirectionX, newBallSpeedX ) =
+                 if ballSpeedX * ballDirectionX + paddleVelocity * paddleEffective >= 0 then
+                     ( ballDirectionX, ballSpeedX * ballDirectionX + paddleVelocity * paddleEffective )
+                 else
+                     ( ballDirectionX, -(ballSpeedX * ballDirectionX + paddleVelocity * paddleEffective) )
+         in
+         { direction = ( newBallDirectionX, -ballDirectionY )
+         , judgeCollision = True
+         , newBallSpeedX = newBallSpeedX
+         }
 
-        else if ballDirectionX < 0 && ballPositionX - r <= paddlePositionX + width && ballPositionX - r >= paddlePositionX + width - 1 && ballPositionY >= paddlePositionY && ballPositionY <= paddlePositionY + height then
-            { direction = ( -ballDirectionX, ballPositionY)
-            , judgeCollision = True
-            , newBallSpeedX = ballSpeedX
-            }
+    --else if ballDirectionX > 0 && ballPositionX + r >= paddlePositionX && ballPositionX + r <= paddlePositionX + 1 && ballPositionY >= paddlePositionY && ballPositionY <= paddlePositionY + height then
+    --    { direction = ( -1, ballPositionY)
+    --    , judgeCollision = True
+    --    , newBallSpeedX = ballSpeedX
+    --    }
+    --
+    --else if ballDirectionX < 0 && ballPositionX - r <= paddlePositionX + width && ballPositionX - r >= paddlePositionX + width - 1 && ballPositionY >= paddlePositionY && ballPositionY <= paddlePositionY + height then
+    --    { direction = ( 1, ballPositionY)
+    --    , judgeCollision = True
+    --    , newBallSpeedX = ballSpeedX
+    --    }
 
-        else if (ballPositionX - paddlePositionX) * (ballPositionX - paddlePositionX) + (ballPositionY - paddlePositionY) * (ballPositionY - paddlePositionY) < r*r then
-            { direction = ( -1, -1 )
-            , judgeCollision = True
-            , newBallSpeedX = ballSpeedX
-            }
+    else if (distance ( ballPositionX, ballPositionY) (paddlePositionX, paddlePositionY) ) < r*r then
+        { direction = ( -1, -1 )
+        , judgeCollision = True
+        , newBallSpeedX = ballSpeedX
+        }
 
-        else if (ballPositionX - paddlePositionX - width) * (ballPositionX - paddlePositionX - width) + (ballPositionY - paddlePositionY) * (ballPositionY - paddlePositionY) < r*r then
-            { direction = ( 1, -1 )
-            , judgeCollision = True
-            , newBallSpeedX = ballSpeedX
-            }
+    else if (distance ( ballPositionX, ballPositionY) (paddlePositionX + width, paddlePositionY) ) < r*r then
+        { direction = ( 1, -1 )
+        , judgeCollision = True
+        , newBallSpeedX = ballSpeedX
+        }
 
-        else
-            { direction = ( ballDirectionX, ballDirectionY)
-            , judgeCollision = False
-            , newBallSpeedX = ballSpeedX
-            }
+    else if (distance ( ballPositionX, ballPositionY) (paddlePositionX, paddlePositionY + height) ) < r*r then
+        { direction = ( -1, 1 )
+        , judgeCollision = True
+        , newBallSpeedX = ballSpeedX
+        }
+
+    else if (distance ( ballPositionX, ballPositionY) (paddlePositionX + width, paddlePositionY + height) ) < r*r then
+        { direction = ( 1, 1 )
+        , judgeCollision = True
+        , newBallSpeedX = ballSpeedX
+        }
+
+
     else
         { direction = ( ballDirectionX, ballDirectionY)
         , judgeCollision = False
         , newBallSpeedX = ballSpeedX
         }
+
+
+distance : ( Float, Float ) -> ( Float, Float ) -> Float
+distance (x1, y1) (x2, y2) =
+    (x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2)
 
 
 determineWallCollision : GameModel -> { direction: (Float, Float), judgeCollision: Bool }

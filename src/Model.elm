@@ -31,6 +31,7 @@ type alias GameModel =
     , paddleVelocityX : Float
     , paddleMovingSpeed : Float
     , paddleSize : ( Float, Float )
+    , effectiveOfPaddle : Float
     , windowSize : ( Float, Float )
     , blockRange : ( Float, Float )
     , blockNumber : ( Int, Int )
@@ -82,12 +83,13 @@ initGameModel =
     , paddleVelocityX = 0
     , paddleMovingSpeed = 0.1
     , paddleSize = ( 20, 2 )
+    , effectiveOfPaddle = 0.5
     , windowSize = ( 100, 77 )
     , blockRange = ( blockRangeX, blockRangeY )
     , blockNumber = ( blockNumberX, blockNumberY )
     , blockSize = ( blockRangeX / blockNumberX, blockRangeY / blockNumberY )
     , blocks = Array.repeat blockNumberX <| Array.repeat blockNumberY 3
-    , life = 5
+    , life = 0
     --, pressedKeys = []
     }
 
