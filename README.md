@@ -29,14 +29,14 @@ make
 ```
 
 
-## Running
+## Development
 
 ```shell script
 elm-app start
 ```
 Then you can play the game at  http://localhost:3000/
 
-## Build
+## Production
 
 ```shell script
 elm-app build

@@ -1,6 +1,6 @@
 {
   "name": "vg100-p1-breakout",
-  "version": "1.0.0",
+  "version": "1.0.4",
   "description": "This project is bootstrapped with [Create Elm App](https://github.com/halfzebra/create-elm-app).",
   "main": "index.js",
   "directories": {
