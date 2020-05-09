@@ -14,7 +14,8 @@ You can find the most recent version of this guide [here](https://github.com/hal
 ## Setup
 
 ```shell script
-elm make
+npm i -g yarn create-elm-app
+make
 ```
 
 ## Running
