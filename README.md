@@ -14,7 +14,8 @@ You can find the most recent version of this guide [here](https://github.com/hal
 ## Setup
 
 ```shell script
-npm i -g create-elm-app
+npm i -g create-elm-app yarn
+yarn
 git submodule update --init --recursive
 cd elm-mdc && make
 cd ..
