@@ -21,28 +21,29 @@ import Svg.Attributes exposing (height, viewBox, width)
 view : Model -> Html Msg
 view model =
     div [ class "container" ]
-        [ div []
-            [ Button.view Mdc
-                "button-start"
-                model.mdc
-                [ Button.ripple, Options.onClick (GameInput Start True) ]
-                [ Html.text "Start moving!" ]
-            , Button.view Mdc
-                            "button-stop"
-                            model.mdc
-                            [ Button.ripple, Options.onClick (GameInput Pause True) ]
-                            [ Html.text "Stop moving!" ]
-            , Button.view Mdc
-                            "button-reset"
-                            model.mdc
-                            [ Button.ripple, Options.onClick (GameInput Reset True) ]
-                            [ Html.text "Reset the Game!" ]
-            --, button [ onClick (GameInput Start True) ] [ Html.text "Start moving!" ]
-            --, button [ onClick (GameInput Pause True) ] [ Html.text "Stop moving!" ]
-            --, button [ onClick (GameInput Reset True) ] [ Html.text "Reset the Game!" ]
-            ]
+        [ div [ class "title" ] [ Html.text "Have fun!" ]
         , div []
             [ displayGameBoard model ]
+        --, div []
+        --    [ Button.view Mdc
+        --        "button-start"
+        --        model.mdc
+        --        [ Button.ripple, Options.onClick (GameInput Start True) ]
+        --        [ Html.text "Start moving!" ]
+        --    , Button.view Mdc
+        --                    "button-stop"
+        --                    model.mdc
+        --                    [ Button.ripple, Options.onClick (GameInput Pause True) ]
+        --                    [ Html.text "Stop moving!" ]
+        --    , Button.view Mdc
+        --                    "button-reset"
+        --                    model.mdc
+        --                    [ Button.ripple, Options.onClick (GameInput Reset True) ]
+        --                    [ Html.text "Reset the Game!" ]
+        --    --, button [ onClick (GameInput Start True) ] [ Html.text "Start moving!" ]
+        --    --, button [ onClick (GameInput Pause True) ] [ Html.text "Stop moving!" ]
+        --    --, button [ onClick (GameInput Reset True) ] [ Html.text "Reset the Game!" ]
+        --    ]
         ]
 
 

@@ -29,3 +29,10 @@ img {
   max-width: 60%;
   margin: auto;
 }
+
+.title {
+  font-size: 30px;
+  margin-bottom: 2%;
+  margin-top: 2%;
+  text-decoration-color: #252168;
+}
