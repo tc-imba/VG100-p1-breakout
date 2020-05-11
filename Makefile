@@ -3,4 +3,4 @@ all:
 	git submodule update --init --recursive
 	cd elm-mdc && make
 	elm make || echo ''
-	elm-app build
+	PUBLIC_URL='.' elm-app build
