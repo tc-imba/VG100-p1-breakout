@@ -21,7 +21,7 @@ import Svg.Attributes exposing (height, viewBox, width)
 view : Model -> Html Msg
 view model =
     div [ class "container" ]
-        [ div [ class "title" ] [ Html.text "Have fun!" ]
+        [ div [ class "title" ] [ Html.text "Good luck!" ]
         , div []
             [ displayGameBoard model ]
         --, div []
