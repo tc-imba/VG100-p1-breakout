@@ -1,7 +1,6 @@
 module Update exposing (..)
 
 import Keyboard exposing (RawKey)
-import Material
 import Model exposing (..)
 import Array
 import Debug exposing (log)
@@ -40,8 +39,6 @@ update msg model =
         --            )
         --        _ ->
         --            (model, Cmd.none)
-        Mdc msg_ ->
-            Material.update Mdc msg_ model
 
         GameInput Start isDown ->
             case isDown of

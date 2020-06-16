@@ -3,11 +3,9 @@ module Main exposing (..)
 import Browser
 import Browser.Events
 import Keyboard exposing (Key(..), RawKey)
-import Material
 import Model exposing (..)
 import Update exposing (keyToGameControl, update)
 import View exposing (view)
-
 
 
 ---- PROGRAM ----
@@ -19,7 +17,6 @@ subscriptions model =
         [ Browser.Events.onAnimationFrameDelta TimeUpdate
         , Keyboard.downs <| keyToGameControl True
         , Keyboard.ups <| keyToGameControl False
-        , Material.subscriptions Mdc model
         ]
 
 

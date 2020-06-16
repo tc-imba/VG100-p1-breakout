@@ -3,8 +3,6 @@ module View exposing (..)
 import Html exposing (Html, button, div)
 import Html.Attributes exposing (class)
 import Html.Events exposing (onClick)
-import Material.Button as Button
-import Material.Options as Options
 import Model exposing (..)
 import Objects.Background exposing (background, backgroundtext)
 import Objects.Ball exposing (ball)

@@ -2,7 +2,6 @@ module Model exposing (..)
 
 import Array
 import Keyboard
-import Material exposing (Msg)
 
 
 
@@ -11,7 +10,6 @@ import Material exposing (Msg)
 
 type alias Model =
     { state : GameState
-    , mdc : Material.Model Msg
     }
 
 
@@ -49,7 +47,6 @@ type Msg
     | StartMoving
     | StopMoving
     | NoOp
-    | Mdc (Material.Msg Msg)
 
 
 type GameControl
@@ -96,4 +93,4 @@ initGameModel =
 
 init : ( Model, Cmd Msg )
 init =
-    ( { state = NotPlaying initGameModel, mdc = Material.defaultModel }, Material.init Mdc )
+    ( { state = NotPlaying initGameModel }, Cmd.none )
