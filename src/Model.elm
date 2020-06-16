@@ -2,7 +2,7 @@ module Model exposing (..)
 
 import Array
 import Keyboard
-
+import Time exposing (now, posixToMillis)
 
 
 ---- MODEL ----
@@ -37,6 +37,9 @@ type alias GameModel =
     , blocks : Array.Array (Array.Array Int)
     , life : Int
     --, pressedKeys: List Key
+    , combo: Int
+    , currentTime: Float
+    , lastHitTime: Float
     }
 
 
@@ -88,6 +91,9 @@ initGameModel =
     , blocks = Array.repeat blockNumberX <| Array.repeat blockNumberY 3
     , life = 0
     --, pressedKeys = []
+    , combo = 0
+    , currentTime = 0
+    , lastHitTime = 0
     }
 
 

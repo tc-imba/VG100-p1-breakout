@@ -16,12 +16,23 @@ import Svg.Attributes exposing (height, viewBox, width)
 ---- VIEW ----
 
 
+viewCombo : Model -> String
+viewCombo model =
+    case model.state of
+        Playing m ->
+            "Combo: " ++ String.fromInt m.combo
+
+        _ ->
+            "Good luck!"
+
+
 view : Model -> Html Msg
 view model =
     div [ class "container" ]
-        [ div [ class "title" ] [ Html.text "Good luck!" ]
+        [ div [ class "title" ] [ Html.text (viewCombo model) ]
         , div []
             [ displayGameBoard model ]
+
         --, div []
         --    [ Button.view Mdc
         --        "button-start"

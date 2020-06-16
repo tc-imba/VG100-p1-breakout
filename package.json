@@ -23,6 +23,7 @@
   },
   "homepage": "https://github.com/zhizhuoxin/vg100-p1-breakout#readme",
   "dependencies": {
+    "howler": "^2.2.0",
     "normalize.css": "^8.0.1",
     "typeface-roboto": "^0.0.75"
   }

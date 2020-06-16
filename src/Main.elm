@@ -8,6 +8,7 @@ import Update exposing (keyToGameControl, update)
 import View exposing (view)
 
 
+
 ---- PROGRAM ----
 
 
@@ -23,8 +24,8 @@ subscriptions model =
 main : Program () Model Msg
 main =
     Browser.element
-        { view = view
-        , init = \_ -> init
+        { init = \_ -> init
         , update = update
+        , view = view
         , subscriptions = subscriptions
         }
